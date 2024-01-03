@@ -298,4 +298,28 @@ public class QuerydslBasicTest {
         team.name */
     }
 
+
+    /**
+     * 팀 A에 소속된 모든 회원
+     */
+    @Test
+    public void join() {
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .join(member.team, team) // member와 team을 join, team은 별칭
+                .where(team.name.eq("teamA"))
+                .fetch();
+
+        Assertions.assertThat(result)
+                .extracting("username")
+                .containsExactly("member1","member2");
+
+        /* select member1
+            from Member member1
+              inner join member1.team as team
+            where team.name = ?1 */
+    }
+
+
+
 }
