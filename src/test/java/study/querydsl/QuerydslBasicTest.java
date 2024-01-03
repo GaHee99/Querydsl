@@ -327,6 +327,35 @@ public class QuerydslBasicTest {
         where team.name = ?1 */
     }
 
+    /**
+     * 세타 조인 : from절에 나열
+     * 회원의 이름이 팀 이름과 같은 회원 조회
+     * 주의 : 외부 조인 불가능!
+     */
+    @Test void theta_join() {
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+        em.persist(new Member("teamC"));
+
+        List<Member> result = queryFactory
+                .select(member)
+                .from(member, team)
+                .where(member.username.eq(team.name))
+                .fetch();
+
+        Assertions.assertThat(result)
+                .extracting("username")
+                .containsExactly("teamA","teamB");
+
+        /* select
+        member1
+        from
+            Member member1,
+            Team team
+        where
+        member1.username = team.name */
+    }
+
 
 
 }
