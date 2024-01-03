@@ -7,6 +7,7 @@ import static study.querydsl.entity.QTeam.team;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -651,5 +652,44 @@ public class QuerydslBasicTest {
         from Member member1 */
     }
 
+
+    //stringValue() -> enum처리할 때 자주 사용
+    @Test
+    public void constant() {
+        List<Tuple> result = queryFactory
+                .select(member.username, Expressions.constant("A"))
+                .from(member)
+                .fetch();
+
+        for(Tuple s : result) {
+            System.out.println("Tuple = " + s);
+        }
+
+        //JPQL에서는 A안나가고, 결과 값에서만 상수가 추가된다.
+        /* select member1.username
+        from Member member1 */
+
+    //    Tuple = [member1, A]
+    //    Tuple = [member2, A]
+    //    Tuple = [member3, A]
+    //    Tuple = [member3, A]
+
+    }
+
+    @Test
+    public void concat() { //stringValue()이용
+        List<String> result = queryFactory.select(member.username.concat("_").concat(member.age.stringValue()))
+                .from(member)
+                .where(member.username.eq("member1"))
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s); //s = member1_10
+        }
+
+        /* select concat(concat(member1.username,?1),str(member1.age))
+        from Member member1
+        where member1.username = ?2 */
+    }
 
 }
