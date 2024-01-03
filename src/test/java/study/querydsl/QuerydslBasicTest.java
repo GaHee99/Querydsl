@@ -8,6 +8,8 @@ import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceUnit;
 import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -452,6 +454,45 @@ public class QuerydslBasicTest {
         team t1_0
         on m1_0.username=t1_0.name --이 부분이 중요--
         */
+    }
+
+
+    @PersistenceUnit //entityManager를 만드는 factory
+    EntityManagerFactory emf;
+
+    //TIP: 페치 조인의 경우, 영속성 컨텍스트에 남아 있는 것들을 지워주지 않으면 결과를 제대로 보기 힘들다.
+    @Test
+    public void fetchJoinNo() {
+        em.flush();
+        em.clear();
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1"))
+                .fetchOne(); //member만 조회
+
+        // 이미 로딩이 된 엔티티인지, 로딩이 안 된 엔티티인지 알 수 있다.
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
+        assertThat(loaded).as("페치 조인 미적용").isFalse();
+
+    }
+
+
+    //TIP: 페치 조인의 경우, 영속성 컨텍스트에 남아 있는 것들을 지워주지 않으면 결과를 제대로 보기 힘들다.
+    @Test
+    public void fetchJoinUse() {
+        em.flush();
+        em.clear();
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .join(member.team, team).fetchJoin() //.fetchJoin()만 넣어주면 된다.
+                .where(member.username.eq("member1"))
+                .fetchOne(); //member만 조회
+
+        // 이미 로딩이 된 엔티티인지, 로딩이 안 된 엔티티인지 알 수 있다.
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
+        assertThat(loaded).as("페치 조인 적용").isTrue();
     }
 
 
