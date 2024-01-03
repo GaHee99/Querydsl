@@ -173,9 +173,62 @@ public class QuerydslBasicTest {
                 member1.username asc nulls last */
     }
 
+    @Test
+    public void paging1() {
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1) //0부터 시작
+                .limit(2)
+                .fetch();
+
+        assertThat(result.size()).isEqualTo(2);
 
 
+         /* select
+        m1_0.member_id,
+                m1_0.age,
+                m1_0.team_id,
+                m1_0.username
+        from
+        member m1_0
+        order by
+        m1_0.username desc
+        offset
+                ? rows
+        fetch
+        first ? rows only
+            */
+    }
 
+    @Test
+    public void paging2() {
+        QueryResults<Member> result = queryFactory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1) //0부터 시작
+                .limit(2)
+                .fetchResults();
+
+        assertThat(result.getTotal()).isEqualTo(4);
+        assertThat(result.getLimit()).isEqualTo(2);
+        assertThat(result.getOffset()).isEqualTo(1);
+        assertThat(result.getResults().size()).isEqualTo(2);
+
+        // fetchResults는 count쿼리 나가고, content쿼리 나간다
+
+//        select
+//        m1_0.member_id,
+//                m1_0.age,
+//                m1_0.team_id,
+//                m1_0.username
+//        from
+//        member m1_0
+//        order by
+//        m1_0.username desc
+//        offset
+//                ?
+    }
 
 
 }
