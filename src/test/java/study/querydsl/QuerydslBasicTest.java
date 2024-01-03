@@ -1,5 +1,6 @@
 package study.querydsl;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static study.querydsl.entity.QMember.*;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -59,17 +60,42 @@ public class QuerydslBasicTest {
 
     @Test
     public void startQuerydsl() {
-        QMember m1 = new QMember("m1"); // JPQL에 m1이 먹힌다, 같은 테이블을 join해서 사용하는 경우에만 QMember 선언
-        Member findMember = queryFactory
+           Member findMember = queryFactory
                                         .select(member) //static import 권장
                                         .from(member)
                                         .where(member.username.eq("member1")) // 파라미터 바인딩 처리
                                         .fetchOne();
 
-        Assertions.assertThat(findMember.getUsername()).isEqualTo("member1");
+        assertThat(findMember.getUsername()).isEqualTo("member1");
     }
 
+    @Test
+    public void search() {
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1").and(member.age.eq(10)))
+                .fetchOne();
 
+        Member findMemberWithAge = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1")
+                        .and(member.age.between(10, 30)))
+                .fetchOne();
 
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void searchAndParam() {
+        Member findMember = queryFactory //쉼표로 and 가능
+                .selectFrom(member)
+                .where(
+                        member.username.eq("member1"),
+                        member.age.eq(10)
+                )
+                .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
 
 }
