@@ -12,6 +12,7 @@ spring:
       hibernate:
 #        show_sql: true
         format_sql: true
+        use_sql_comments: true #QueryDSL 에서 JPQL문을 보고 싶을 때
 
 logging.level:
   org.hibernate.SQL: debug

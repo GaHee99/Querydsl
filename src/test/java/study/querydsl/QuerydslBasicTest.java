@@ -1,5 +1,7 @@
 package study.querydsl;
 
+import static study.querydsl.entity.QMember.*;
+
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
@@ -57,12 +59,11 @@ public class QuerydslBasicTest {
 
     @Test
     public void startQuerydsl() {
-        QMember m = new QMember("m"); // "m"은 별칭, 크게 중요하진 않음 -> 나중엔 안쓸 것
-
+        QMember m1 = new QMember("m1"); // JPQL에 m1이 먹힌다, 같은 테이블을 join해서 사용하는 경우에만 QMember 선언
         Member findMember = queryFactory
-                                        .select(m)
-                                        .from(m)
-                                        .where(m.username.eq("member1")) // 파라미터 바인딩 처리
+                                        .select(member) //static import 권장
+                                        .from(member)
+                                        .where(member.username.eq("member1")) // 파라미터 바인딩 처리
                                         .fetchOne();
 
         Assertions.assertThat(findMember.getUsername()).isEqualTo("member1");
