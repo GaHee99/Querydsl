@@ -306,7 +306,7 @@ public class QuerydslBasicTest {
     public void join() {
         List<Member> result = queryFactory
                 .selectFrom(member)
-                .join(member.team, team) // member와 team을 join, team은 별칭
+                .leftJoin(member.team, team) // member와 team을 join, team은 별칭
                 .where(team.name.eq("teamA"))
                 .fetch();
 
@@ -314,10 +314,17 @@ public class QuerydslBasicTest {
                 .extracting("username")
                 .containsExactly("member1","member2");
 
+        // inner join
         /* select member1
             from Member member1
               inner join member1.team as team
             where team.name = ?1 */
+
+        // left join
+        /* select member1
+        from Member member1
+          left join member1.team as team
+        where team.name = ?1 */
     }
 
 
