@@ -3,8 +3,10 @@ package study.querydsl;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static study.querydsl.entity.QMember.*;
 
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -98,4 +100,39 @@ public class QuerydslBasicTest {
         assertThat(findMember.getUsername()).isEqualTo("member1");
     }
 
+    @Test
+    public void resultFetch() {
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        Member fetchOne = queryFactory
+                .selectFrom(member)
+                .fetchOne();
+
+        Member fetchFirst = queryFactory
+                .selectFrom(member)
+                .fetchFirst();// == .limit(1).fetchOne()과 통치
+
+
+        QueryResults<Member> results = queryFactory
+                .selectFrom(member)
+                .fetchResults();
+
+        results.getTotal(); // TotalCount를 가져와야 하므로, 쿼리가 두번 실행된다.
+                            // select count(m1_0.member_id) from member m1_0 실행됨
+                            // 페이징 하기 위한 totalCount를 가져온다.
+        List<Member> content = results.getResults(); // 내용 가져오기
+
+        long total = queryFactory       //select절을 count만 한다.
+                .selectFrom(member)
+                .fetchCount();
+
+        /**
+         * 페이징 쿼리가 복잡해지면 데이터(content)쿼리와 실제 total count를 갖고 온 결과값이
+         * 성능 이슈로 다를 수 있다. -> 성능을 더 최적화 하기 위해서 total count쿼리를 최적화 해서 만든 경우가 있기 때문
+         * 이런 상황에서는(복잡하고 성능이 중요한 페이징 쿼리) 위의 두개를 쓰면 안되고,
+         * 쿼리 두개를 따로 날려야 한다.
+         */
+    }
 }
