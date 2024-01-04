@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.QMemberDto;
 import study.querydsl.dto.UserDto;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
@@ -853,5 +854,20 @@ public class QuerydslBasicTest {
         from Member member1 */
     }
 
+
+    // 장점 : dto필드에 대한 컴파일 오류를 잘 잡을 수 있다.
+    // 단점 : 1. Qfile생성해야한다.
+    //       2. 코드 의존성이 높아진다. (memberDto가 Querydsl 라이브러리의 영향을받는다.)
+    @Test
+    public void findDtoByQueryProjection() {
+        List<MemberDto> result = queryFactory
+                .select(new QMemberDto(member.username, member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
 
 }
