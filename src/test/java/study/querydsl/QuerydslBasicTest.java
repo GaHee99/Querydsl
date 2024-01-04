@@ -1078,5 +1078,71 @@ public class QuerydslBasicTest {
     }
 
 
+    /** SQL function 호출하기 **/
+    // member의 username중의 member라는 단어를 M으로 바꾸기
+    @Test
+    public void sqlFunction() {
+        List<String> result = queryFactory
+                .select(
+                        Expressions.stringTemplate("function('replace', {0}, {1}, {2})",
+                                member.username, "member", "M"))
+                .from(member)
+                .fetch();
+        for (String s : result) {
+            System.out.println("s = " + s);
+
+            //result
+//            s = M1
+//            s = M2
+//            s = M3
+//            s = M3
+        }
+
+        // SQL
+//        select
+//        replace(m1_0.username, ?, ?)
+//        from
+//        member m1_0
+
+        // JPQL
+        /* select
+        function('replace', member1.username, ?1, ?2)
+            from
+        Member member1 */
+    }
+
+
+    //소문자 바꾸기, -> 쿼리 dsl에 내장함수 쓰는게 낫다.
+    @Test
+    public void sqlFunction2() {
+        List<String> result = queryFactory
+                .select(member.username)
+                .from(member)
+//                .where(member.username.eq(
+//                        Expressions.stringTemplate("function('lower', {0})", member.username)))
+                .where(member.username.eq(member.username.lower()))
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s );
+        }
+
+        //SQL
+//        select
+//        m1_0.username
+//                from
+//        member m1_0
+//        where
+//        m1_0.username=lower(m1_0.username)
+
+        // JPQL
+         /* select
+        member1.username
+    from
+        Member member1
+    where
+        member1.username = function('lower', member1.username) */
+    }
+
 
 }
