@@ -8,7 +8,9 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
@@ -16,6 +18,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceUnit;
+import jakarta.persistence.criteria.CriteriaBuilder.In;
 import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -907,6 +910,57 @@ public class QuerydslBasicTest {
         where
             member1.username = ?1
         and member1.age = ?2 */
+    }
+
+
+    /** 동적 쿼리 - Where 다중 파라미터 사용 ***/
+    // 김영한님이 실무에서 정말 좋아하는 방법! -> 코드가 깔끔해진다.
+    @Test
+    public void dynamicQueyr_whereParam() {
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+
+        List<Member> result = searchMember2(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+
+        /* select member1
+        from Member member1
+        where member1.username = ?1
+
+        or
+
+        select member1
+        from Member member1
+        where member1.username = ?1 and member1.age = ?2 */
+    }
+
+    private List<Member> searchMember2(String usernameCond, Integer ageCond) {
+        return queryFactory
+                .selectFrom(member)
+                .where(usernameEq(usernameCond), ageEq(ageCond)) //여기에서 바로 해결, where의 인자로 Null이 들어가면 아무일도 일어나지 않는다.
+                                                                 //따라서 동적 쿼리가 만들어진다.
+                .fetch();
+
+        //or
+//        return queryFactory
+//                .selectFrom(member)
+//                .where(allEq(usernameCond, ageCond)) // 동적 쿼리를 조립할 수 있다.
+//                //따라서 동적 쿼리가 만들어진다.
+//                .fetch();
+    }
+
+    private BooleanExpression usernameEq(String usernameCond) {
+        return usernameCond != null ? member.username.eq(usernameCond) : null;
+    }
+
+    // ex) 광고 상태 isValid, 날짜가 In~~ 등등 condition => isServicable으로 조립하기 쉬워진다.
+    private BooleanExpression ageEq(Integer ageCond) {
+        return ageCond != null ? member.age.eq(ageCond) : null;
+    }
+
+    // 한번에 BooleanBuilder을 조림할 수 있다.
+    private BooleanExpression allEq(String usernameCond, Integer ageCond) {
+        return usernameEq(usernameCond).and(ageEq(ageCond));
     }
 
 
