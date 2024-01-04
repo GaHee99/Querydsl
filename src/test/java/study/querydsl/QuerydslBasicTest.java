@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static study.querydsl.entity.QMember.*;
 import static study.querydsl.entity.QTeam.team;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
@@ -869,5 +870,44 @@ public class QuerydslBasicTest {
             System.out.println("memberDto = " + memberDto);
         }
     }
+
+
+    /** 동적 쿼리 - BooleanBuilder사용 ***/
+    @Test
+    public void dynamicQuery_BooleanBuilder() {
+        String usernameParam = "member1";
+        Integer ageParam = null;
+
+        List<Member> result = searchMember1(usernameParam, ageParam);
+        Assertions.assertThat(result.size()).isEqualTo(1);
+    }
+
+    // 파라미터 값이 null인지 아닌지에 따라서 쿼리가 동적으로 바뀌어야 하는 상황
+    private List<Member> searchMember1(String usernameCond, Integer ageCond) {
+        BooleanBuilder builder = new BooleanBuilder();
+//        BooleanBuilder builder = new BooleanBuilder(member.username.eq(usernameCond)); 초기 조건을 넣을 수 있다. (무조건 들어가야 하는 값일 경우)
+
+        if (usernameCond != null) {
+            builder.and(member.username.eq(usernameCond)); // usernameCond에 값이 있으면 'and'조건을 넣어준다.
+        }
+
+        if (ageCond != null) {
+            builder.and(member.age.eq(ageCond));
+        }
+
+        return queryFactory
+                .selectFrom(member)
+                .where(builder)
+                .fetch();
+
+        /* select
+        member1
+        from
+            Member member1
+        where
+            member1.username = ?1
+        and member1.age = ?2 */
+    }
+
 
 }
