@@ -692,4 +692,34 @@ public class QuerydslBasicTest {
         where member1.username = ?2 */
     }
 
+
+    @Test
+    public void simpleProjection() {
+        List<String> result = queryFactory
+                .select(member.username) //Projection
+                .from(member)
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+    }
+
+
+    @Test
+    public void tupleProjection() {
+        List<Tuple> result = queryFactory //Tuple은 repository딴에서만 사용하는 것을 권장, 되도록이면 DTO로 사용하자!
+                .select(member.username, member.age)  //Projection
+                .from(member)
+                .fetch();
+
+        for(Tuple tuple: result) {
+            String userName = tuple.get(member.username);
+            Integer age = tuple.get(member.age);
+
+            System.out.println("username = " + userName);
+            System.out.println("age = " + age);
+        }
+    }
+
 }
