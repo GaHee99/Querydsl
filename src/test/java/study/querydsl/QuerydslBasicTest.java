@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.MemberDto;
 import study.querydsl.dto.QMemberDto;
@@ -962,6 +963,120 @@ public class QuerydslBasicTest {
     private BooleanExpression allEq(String usernameCond, Integer ageCond) {
         return usernameEq(usernameCond).and(ageEq(ageCond));
     }
+
+
+
+    /** 수정, 삭제 벌크 연산(배치 쿼리) **/
+    // 벌크 연산 후 영속성 컨텍스트를 초기화하자!
+    // em.flush()
+    // em.clear()
+    @Test
+    @Commit
+    public void bulkUpdateWithNoFlush() {
+        // 영속성 컨텍스트 + DB
+        // member1 = 10 -> DB member1
+        // member2 = 20 -> DB member2
+        // member3 = 30 -> DB member3
+        // member4 = 40 -> DB member4
+
+        // 벌크연산
+        long count = queryFactory //count 에는 영향을 받은 row수가 나온다.
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+
+
+        // 실행 후DB -> 영속성 컨텍스트와 값이 매칭이 안된다.
+        // member1 = 10 -> DB 비회원
+        // member2 = 20 -> DB 비회원
+        // member3 = 30 -> DB member3
+        // member4 = 40 -> DB member3
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member1 : result) {
+            System.out.println("member1 = " + member1);
+
+            //실행 값 -> 쿼리는 잘 나가지만, 영속성 컨텍스트가 우선권을 갖기 때문에 실행 결과 값이 db와 다름
+//            member1 = Member(id=1, username=member1, age=10)
+//            member1 = Member(id=2, username=member2, age=20)
+//            member1 = Member(id=3, username=member3, age=30)
+//            member1 = Member(id=4, username=member3, age=40)
+
+             /* select
+                member1
+            from
+                Member member1 */
+
+        }
+
+    }
+
+
+    @Test
+    @Commit
+    public void bulkUpdateWithClear() {
+        // 벌크연산
+        long count = queryFactory //count 에는 영향을 받은 row수가 나온다.
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+        em.flush();
+        em.clear();
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member1 : result) {
+            System.out.println("member1 = " + member1);
+
+//            member1 = Member(id=1, username=비회원, age=10)
+//            member1 = Member(id=2, username=비회원, age=20)
+//            member1 = Member(id=3, username=member3, age=30)
+//            member1 = Member(id=4, username=member3, age=40)
+
+             /* select
+                member1
+            from
+                Member member1 */
+
+        }
+    }
+
+
+    @Test
+    public void bulkAdd() {
+        queryFactory
+                .update(member)
+                .set(member.age, member.age.add(1)) // 뺼셈은 1 넣기  , minus()없음
+            //  .set(meber.age, member.age.multiply(1)) // 곱셈
+                .execute();
+
+        /* update
+        Member member1
+            set
+        member1.age = member1.age + ?1 */
+    }
+
+    @Test
+    public void bulkDelete() {
+        long count = queryFactory
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
+
+         /* delete
+        from
+            Member member1
+        where
+        member1.age > ?1 */
+    }
+
 
 
 }
